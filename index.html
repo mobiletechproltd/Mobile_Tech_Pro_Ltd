@@ -11,19 +11,16 @@
     --bg:#ffffff; --bg-alt:#f6f7f9; --text:#1c2230; --muted:#5b6472; --border:#e6e8ec; --radius:12px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  html{scroll-behavior:smooth;}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
   a{color:inherit;text-decoration:none;}
   .page{max-width:520px;margin:0 auto;padding:0 20px 48px;}
 
-  header{padding:20px 0;text-align:center;}
+  header{padding:28px 0 4px;text-align:center;}
   .logo-icon{width:56px;height:56px;margin:0 auto 14px;display:block;}
   header h1{font-size:clamp(1.3rem,5vw,1.7rem);font-weight:800;letter-spacing:-0.3px;}
   header p.tagline{color:var(--muted);margin-top:8px;font-size:0.98rem;}
 
-  .sync-note{font-size:0.72rem;color:#b45309;text-align:center;margin:0 0 16px;display:none;}
-
-  .list{display:flex;flex-direction:column;gap:10px;margin-top:26px;}
+  .list{display:flex;flex-direction:column;gap:10px;margin-top:28px;}
   .row{
     display:flex;align-items:center;gap:14px;width:100%;
     padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);
@@ -40,30 +37,14 @@
   .row.primary .row-icon{background:rgba(255,255,255,0.18);color:#fff;}
   .row.primary .row-title{color:#fff;}
   .row.primary .row-sub{color:rgba(255,255,255,0.85);}
+  .row.primary .row-arrow{color:rgba(255,255,255,0.85);}
   .row-icon svg{width:20px;height:20px;}
   .row-text{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;}
   .row-title{font-weight:700;font-size:0.98rem;}
-  .row-sub{color:var(--muted);font-size:0.82rem;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .row-arrow{color:var(--muted);flex-shrink:0;}
-  .row.primary .row-arrow{color:rgba(255,255,255,0.85);}
-
-  .info-lines{margin-top:22px;text-align:center;color:var(--muted);font-size:0.88rem;}
-  .info-lines p{margin-top:4px;}
-
-  section.services{margin-top:40px;}
-  section.services h2{font-size:1.1rem;font-weight:700;margin-bottom:14px;text-align:center;}
-  .service-row{
-    padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;
-  }
-  .service-row .num{color:var(--accent);font-weight:700;font-size:0.76rem;letter-spacing:0.05em;}
-  .service-row h3{font-size:0.96rem;margin-top:4px;}
-  .service-row p{color:var(--muted);font-size:0.86rem;margin-top:3px;}
+  .row-sub{color:var(--muted);font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row-arrow{color:var(--muted);flex-shrink:0;font-size:1.2rem;line-height:1;}
 
   footer{margin-top:40px;text-align:center;color:var(--muted);font-size:0.78rem;}
-
-  @media (min-width:640px){
-    .page{max-width:600px;padding-top:20px;}
-  }
 </style>
 </head>
 <body>
@@ -82,8 +63,6 @@
     <h1 id="hero-name">Mobile Tech Pro Ltd</h1>
     <p class="tagline" id="hero-tagline">Mobile device repairs &amp; tech support</p>
   </header>
-
-  <p class="sync-note" id="sync-note">⚠ Showing saved defaults — live data from Google Sheets hasn't loaded (either the two CSV links at the top of this file are still placeholders, or the fetch failed).</p>
 
   <div class="list">
     <a href="#" target="_blank" rel="noopener" class="row primary" id="cta-whatsapp">
@@ -117,21 +96,11 @@
       <span class="row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 7.1-.7z"/></svg></span>
       <span class="row-text">
         <span class="row-title">Leave a Review</span>
-        <span class="row-sub">On Google Maps</span>
+        <span class="row-sub">Find us on Google Maps</span>
       </span>
       <span class="row-arrow">&#8250;</span>
     </a>
   </div>
-
-  <div class="info-lines" id="info-lines">
-    <p id="contact-address" style="display:none;"></p>
-    <p id="contact-hours" style="display:none;"></p>
-  </div>
-
-  <section class="services" id="services" style="display:none;">
-    <h2>Our Services</h2>
-    <div id="services-list"></div>
-  </section>
 
   <footer>&copy; <span id="year"></span> <span id="footer-name">Mobile Tech Pro Ltd</span>. All rights reserved.</footer>
 
@@ -139,36 +108,29 @@
 
 <script>
 /* ============================================================
-   EDIT THESE TWO LINES ONLY — everything else updates itself.
+   LIVE DATA SOURCE — Google Form "Business Profile"
 
-   1. Create a Google Form for your business profile (company
-      name, WhatsApp number, email, review link, etc). Link its
-      responses to a Sheet. File > Share > Publish to web >
-      pick that response tab > Comma-separated values (.csv) >
-      Publish. Paste the link Google gives you below as
-      SETTINGS_CSV_URL.
+   This page reads its details from the published CSV of the
+   Google Sheet linked to your "Business Profile" form.
 
-   2. Do the same with a second Form for adding services (one
-      submission = one service). Publish that response tab the
-      same way and paste the link as SERVICES_CSV_URL.
+   To update the company name, WhatsApp number, email, or
+   Google Maps review link: just submit that form again with
+   the new details. The newest submission wins, automatically,
+   next time the page loads. No file edits, no re-uploading.
 
-   Every time someone submits either form, this page updates
-   automatically next time it's loaded — no file edits, no
-   re-uploading, ever again.
+   IMPORTANT: fill in EVERY field each time you submit. A field
+   left blank falls back to the DEFAULTS below, not to what you
+   entered last time.
    ============================================================ */
-const SETTINGS_CSV_URL = "PASTE_YOUR_SETTINGS_FORM_PUBLISHED_CSV_LINK_HERE";
-const SERVICES_CSV_URL = "PASTE_YOUR_SERVICES_FORM_PUBLISHED_CSV_LINK_HERE";
+const SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7sFK9zOqlpQF_gP4PrK5oxMeFwFBtLnuSsU0iWiviRjPM0saYBvcFW_-jhloCKyjyn7dowYf9lUJS/pub?gid=23061776&single=true&output=csv";
 
-// Fallback values used until (or unless) the live sheet loads successfully.
+// Used only if the live sheet can't be reached (offline, Google outage, etc).
 const DEFAULTS = {
   companyName: "Mobile Tech Pro Ltd",
   tagline: "Mobile device repairs & tech support",
   whatsapp: "+447344544184",
   email: "mobiletechproltd@gmail.com",
-  reviewLink: "https://maps.app.goo.gl/MTwwrvZJNsjKyTPj6?g_st=ic",
-  address: "",
-  hours: "",
-  services: []
+  reviewLink: "https://maps.app.goo.gl/MTwwrvZJNsjKyTPj6?g_st=ic"
 };
 
 let CURRENT = Object.assign({}, DEFAULTS);
@@ -218,99 +180,60 @@ function getField(obj, ...candidates){
   return '';
 }
 
-async function fetchCSV(url){
-  const res = await fetch(url, {cache: 'no-store'});
-  if (!res.ok) throw new Error('Fetch failed: ' + res.status);
-  return parseCSV(await res.text());
+/* Country code used to repair numbers typed in local format ("07344...").
+   44 = UK. Change this if the business ever moves country. */
+const DEFAULT_COUNTRY_CODE = '44';
+
+/* WhatsApp needs the full international number with no +, spaces or zeros.
+   This accepts "+44 7344 544184", "07344544184" or "447344544184" and
+   always produces "447344544184", so a form typo can't break the link. */
+function waDigits(number){
+  let n = String(number).replace(/[^\d]/g, '');
+  if (n.startsWith('00')) n = n.slice(2);            // 0044... -> 44...
+  else if (n.startsWith('0')) n = DEFAULT_COUNTRY_CODE + n.slice(1); // 07344... -> 447344...
+  return n;
 }
 
-function escapeHtml(s){
-  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Displayed as +44 7344 544184 regardless of how it was typed in the form. */
+function prettyPhone(number){
+  return '+' + waDigits(number);
 }
-
-function waDigits(number){ return String(number).replace(/[^\d]/g, ''); }
 
 async function loadData(){
-  const configured = SETTINGS_CSV_URL.startsWith('http') && SERVICES_CSV_URL.startsWith('http');
-  if (!configured){
-    document.getElementById('sync-note').style.display = 'block';
-    render();
-    return;
-  }
   try {
-    const [settingsRows, servicesRows] = await Promise.all([
-      fetchCSV(SETTINGS_CSV_URL),
-      fetchCSV(SERVICES_CSV_URL)
-    ]);
-
-    const settingsObjs = rowsToObjects(settingsRows);
-    if (settingsObjs.length){
-      const latest = settingsObjs[settingsObjs.length - 1]; // most recent form submission wins
+    const res = await fetch(SETTINGS_CSV_URL, {cache: 'no-store'});
+    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+    const objs = rowsToObjects(parseCSV(await res.text()));
+    if (objs.length){
+      const latest = objs[objs.length - 1]; // newest form submission wins
       CURRENT.companyName = getField(latest, 'company name') || CURRENT.companyName;
-      CURRENT.tagline = getField(latest, 'tagline', 'short description') || CURRENT.tagline;
-      CURRENT.whatsapp = getField(latest, 'whatsapp') || CURRENT.whatsapp;
-      CURRENT.email = getField(latest, 'email') || CURRENT.email;
-      CURRENT.reviewLink = getField(latest, 'review') || CURRENT.reviewLink;
-      CURRENT.address = getField(latest, 'address') || CURRENT.address;
-      CURRENT.hours = getField(latest, 'hour') || CURRENT.hours;
+      CURRENT.whatsapp    = getField(latest, 'whatsapp') || CURRENT.whatsapp;
+      CURRENT.email       = getField(latest, 'email') || CURRENT.email;
+      CURRENT.reviewLink  = getField(latest, 'review') || CURRENT.reviewLink;
     }
-
-    const servicesObjs = rowsToObjects(servicesRows);
-    CURRENT.services = servicesObjs
-      .map(o => ({
-        name: getField(o, 'service name', 'name'),
-        desc: getField(o, 'description', 'desc')
-      }))
-      .filter(s => s.name);
   } catch (err){
-    console.warn('Live Google Sheets fetch failed, using saved defaults.', err);
-    document.getElementById('sync-note').style.display = 'block';
+    // Silent fallback — visitors still see a fully working page.
+    console.warn('Live sheet unavailable, using saved defaults.', err);
   }
   render();
 }
 
 function render(){
   const d = CURRENT;
-  const digits = waDigits(d.whatsapp);
-  const waLink = 'https://wa.me/' + digits;
-  const mailLink = 'mailto:' + d.email + '?subject=' + encodeURIComponent('Enquiry from website');
+  const waLink = 'https://wa.me/' + waDigits(d.whatsapp);
+  const mailLink = 'mailto:' + d.email;
   const reviewLink = d.reviewLink || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.companyName));
 
   document.title = d.companyName;
-  document.getElementById('footer-name').textContent = d.companyName;
   document.getElementById('hero-name').textContent = d.companyName;
-  const tagEl = document.getElementById('hero-tagline');
-  if (d.tagline){ tagEl.textContent = d.tagline; tagEl.style.display = 'block'; }
-  else { tagEl.style.display = 'none'; }
+  document.getElementById('footer-name').textContent = d.companyName;
 
   document.getElementById('cta-whatsapp').href = waLink;
   document.getElementById('cta-email').href = mailLink;
   document.getElementById('cta-review').href = reviewLink;
 
-  document.getElementById('row-whatsapp-sub').textContent = d.whatsapp;
+  document.getElementById('row-whatsapp-sub').textContent = prettyPhone(d.whatsapp);
   document.getElementById('row-email-sub').textContent = d.email;
-
-  const addrEl = document.getElementById('contact-address');
-  if (d.address){ addrEl.textContent = d.address; addrEl.style.display = 'block'; }
-  else { addrEl.style.display = 'none'; }
-
-  const hoursEl = document.getElementById('contact-hours');
-  if (d.hours){ hoursEl.textContent = d.hours; hoursEl.style.display = 'block'; }
-  else { hoursEl.style.display = 'none'; }
-
-  const servicesSection = document.getElementById('services');
-  const list = document.getElementById('services-list');
-  if (d.services.length){
-    list.innerHTML = d.services.map((s, i) => `
-      <div class="service-row">
-        <span class="num">${String(i+1).padStart(2,'0')}</span>
-        <h3>${escapeHtml(s.name)}</h3>
-        ${s.desc ? `<p>${escapeHtml(s.desc)}</p>` : ''}
-      </div>`).join('');
-    servicesSection.style.display = 'block';
-  } else {
-    servicesSection.style.display = 'none';
-  }
 }
 
 function saveContact(){
@@ -319,7 +242,7 @@ function saveContact(){
     'BEGIN:VCARD','VERSION:3.0',
     'FN:' + d.companyName,
     'ORG:' + d.companyName,
-    'TEL;TYPE=CELL:' + d.whatsapp,
+    'TEL;TYPE=CELL:' + prettyPhone(d.whatsapp),
     'EMAIL:' + d.email,
     'END:VCARD'
   ].join('\r\n');
@@ -332,8 +255,8 @@ function saveContact(){
   URL.revokeObjectURL(url);
 }
 
-render(); // show defaults immediately, no flash of empty content
-loadData(); // then try to overwrite with live sheet data
+render();    // show saved details instantly
+loadData();  // then refresh from the live sheet
 </script>
 
 </body>
