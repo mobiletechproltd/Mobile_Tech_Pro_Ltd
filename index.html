@@ -24,8 +24,11 @@
   .row{
     display:flex;align-items:center;gap:14px;width:100%;
     padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);
-    background:#fff;cursor:pointer;text-align:left;font-family:inherit;
+    background:#fff;cursor:pointer;text-align:left;
     min-height:60px;
+    /* reset browser button defaults so <button> rows match <a> rows exactly */
+    -webkit-appearance:none;appearance:none;
+    font:inherit;font-size:1rem;line-height:1.5;color:var(--text);margin:0;
   }
   .row:active{background:var(--bg-alt);}
   .row-icon{
@@ -40,7 +43,7 @@
   .row.primary .row-arrow{color:rgba(255,255,255,0.85);}
   .row-icon svg{width:20px;height:20px;}
   .row-text{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;}
-  .row-title{font-weight:700;font-size:0.98rem;}
+  .row-title{font-weight:700;font-size:0.98rem;color:var(--text);}
   .row-sub{color:var(--muted);font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .row-arrow{color:var(--muted);flex-shrink:0;font-size:1.2rem;line-height:1;}
 
@@ -207,6 +210,7 @@ async function loadData(){
     if (objs.length){
       const latest = objs[objs.length - 1]; // newest form submission wins
       CURRENT.companyName = getField(latest, 'company name') || CURRENT.companyName;
+      CURRENT.tagline     = getField(latest, 'tagline', 'slogan', 'strapline') || CURRENT.tagline;
       CURRENT.whatsapp    = getField(latest, 'whatsapp') || CURRENT.whatsapp;
       CURRENT.email       = getField(latest, 'email') || CURRENT.email;
       CURRENT.reviewLink  = getField(latest, 'review') || CURRENT.reviewLink;
@@ -227,6 +231,10 @@ function render(){
   document.title = d.companyName;
   document.getElementById('hero-name').textContent = d.companyName;
   document.getElementById('footer-name').textContent = d.companyName;
+
+  const tagEl = document.getElementById('hero-tagline');
+  if (d.tagline){ tagEl.textContent = d.tagline; tagEl.style.display = ''; }
+  else { tagEl.style.display = 'none'; }
 
   document.getElementById('cta-whatsapp').href = waLink;
   document.getElementById('cta-email').href = mailLink;
