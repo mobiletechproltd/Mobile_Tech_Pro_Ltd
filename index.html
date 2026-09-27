@@ -111,21 +111,23 @@
 
 <script>
 /* ============================================================
-   LIVE DATA SOURCE — Google Form "Business Profile"
+   LIVE DATA SOURCE — DropFix's Shop Details Sheet
 
-   This page reads its details from the published CSV of the
-   Google Sheet linked to your "Business Profile" form.
+   This page reads its details straight from the same Shop Details
+   Sheet DropFix (the shop's till/management app) pushes to on every
+   Tools > Shop Details save -- the same Sheet, the same read method
+   (Google's public "gviz" endpoint), as the repair-tracking site
+   (mobiletechproltd/repair-status) already uses. To update the
+   company name, WhatsApp number, email, or Maps link: edit Shop
+   Details in DropFix and save -- this page picks it up automatically
+   next load. No Form, no CSV, no file edits here.
 
-   To update the company name, WhatsApp number, email, or
-   Google Maps review link: just submit that form again with
-   the new details. The newest submission wins, automatically,
-   next time the page loads. No file edits, no re-uploading.
-
-   IMPORTANT: fill in EVERY field each time you submit. A field
-   left blank falls back to the DEFAULTS below, not to what you
-   entered last time.
+   Only one row ever exists on this Sheet (DropFix overwrites it in
+   place on every save, never appends), so there's no "newest
+   submission" logic needed -- just read that one row.
    ============================================================ */
-const SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7sFK9zOqlpQF_gP4PrK5oxMeFwFBtLnuSsU0iWiviRjPM0saYBvcFW_-jhloCKyjyn7dowYf9lUJS/pub?gid=23061776&single=true&output=csv";
+const SHOP_SHEET_ID = "1JpSdQuex3fO0YSo35eBHlOm6KUYC7AEOHPGxB6Vfe4o";
+const SHOP_SHEET_NAME = "Sheet1";
 
 // Used only if the live sheet can't be reached (offline, Google outage, etc).
 const DEFAULTS = {
@@ -140,47 +142,34 @@ let CURRENT = Object.assign({}, DEFAULTS);
 
 document.getElementById('year').textContent = new Date().getFullYear();
 
-function parseCSV(text){
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for (let i = 0; i < text.length; i++){
-    const c = text[i];
-    if (inQuotes){
-      if (c === '"'){
-        if (text[i+1] === '"'){ field += '"'; i++; }
-        else { inQuotes = false; }
-      } else { field += c; }
-    } else {
-      if (c === '"'){ inQuotes = true; }
-      else if (c === ','){ row.push(field); field = ''; }
-      else if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
-      else if (c === '\r'){ /* skip */ }
-      else { field += c; }
-    }
-  }
-  if (field.length || row.length){ row.push(field); rows.push(row); }
-  return rows;
+// Same normalizeKey/gvizUrl/parseGvizResponse as the tracker site
+// (Customer_QR_Site/index.html) -- identical technique, same Sheet,
+// kept byte-for-byte consistent rather than reinventing a second way
+// to read the same data.
+function normalizeKey(label) {
+  return String(label || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
 
-function rowsToObjects(rows){
-  if (!rows.length) return [];
-  const headers = rows[0].map(h => h.trim());
-  return rows.slice(1)
-    .filter(r => r.some(c => (c||'').trim() !== ''))
-    .map(r => {
-      const obj = {};
-      headers.forEach((h, i) => obj[h] = (r[i] || '').trim());
-      return obj;
+function gvizUrl(sheetId, sheetName) {
+  // headers=1 is explicit on purpose -- without it, gviz guesses whether
+  // row 1 is a header from the data's own type pattern, and guesses
+  // wrong on this exact sheet (only ever a header row + one data row).
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&headers=1`;
+}
+
+function parseGvizResponse(text) {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  const table = JSON.parse(text.slice(start, end + 1)).table;
+  const labels = table.cols.map((c) => c.label);
+  return table.rows.map((row) => {
+    const record = {};
+    row.c.forEach((cell, i) => {
+      const value = cell ? cell.v : "";
+      record[normalizeKey(labels[i])] = value;
     });
-}
-
-function getField(obj, ...candidates){
-  const keys = Object.keys(obj);
-  for (const cand of candidates){
-    const key = keys.find(k => k.toLowerCase().includes(cand.toLowerCase()));
-    if (key && obj[key]) return obj[key];
-  }
-  return '';
+    return record;
+  });
 }
 
 /* Country code used to repair numbers typed in local format ("07344...").
@@ -204,16 +193,16 @@ function prettyPhone(number){
 
 async function loadData(){
   try {
-    const res = await fetch(SETTINGS_CSV_URL, {cache: 'no-store'});
+    const res = await fetch(gvizUrl(SHOP_SHEET_ID, SHOP_SHEET_NAME), {cache: 'no-store'});
     if (!res.ok) throw new Error('Fetch failed: ' + res.status);
-    const objs = rowsToObjects(parseCSV(await res.text()));
-    if (objs.length){
-      const latest = objs[objs.length - 1]; // newest form submission wins
-      CURRENT.companyName = getField(latest, 'company name') || CURRENT.companyName;
-      CURRENT.tagline     = getField(latest, 'tagline', 'slogan', 'strapline') || CURRENT.tagline;
-      CURRENT.whatsapp    = getField(latest, 'whatsapp') || CURRENT.whatsapp;
-      CURRENT.email       = getField(latest, 'email') || CURRENT.email;
-      CURRENT.reviewLink  = getField(latest, 'review') || CURRENT.reviewLink;
+    const rows = parseGvizResponse(await res.text());
+    if (rows.length){
+      const shop = rows[0]; // the one fixed row -- see comment above
+      CURRENT.companyName = shop.shop_name || CURRENT.companyName;
+      CURRENT.whatsapp     = shop.phones    || CURRENT.whatsapp;
+      CURRENT.email        = shop.email     || CURRENT.email;
+      CURRENT.reviewLink   = shop.maps_url  || CURRENT.reviewLink;
+      // No tagline column on this sheet -- DEFAULTS.tagline always applies.
     }
   } catch (err){
     // Silent fallback — visitors still see a fully working page.
